@@ -8,7 +8,9 @@ class BackdropImageSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['id', 'file']
 
 class MovieSerializer(serializers.HyperlinkedModelSerializer):
-    backdrop = serializers.PrimaryKeyRelatedField(many=False, queryset=BackdropImage.objects.all())
+    backdrop = serializers.PrimaryKeyRelatedField(many=False,
+                                                  queryset=BackdropImage.objects.all(),
+                                                  write_only=True)
     backdrop_path = serializers.CharField(read_only=True)
 
     class Meta:

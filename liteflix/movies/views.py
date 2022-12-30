@@ -1,34 +1,17 @@
 from movies.serializers import BackdropImageSerializer, MovieSerializer
-from movies.models import Movie
+from movies.models import Movie, BackdropImage
 from rest_framework import viewsets
-from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
 
-class MoviesViewSet(viewsets.ViewSet):
-    
-    def list(self, request):
-        queryset = Movie.objects.all()
-        serializer = MovieSerializer(queryset, many=True, context={'request': request})
-        return Response(serializer.data)
 
-    def create(self, request):
-        serializer = MovieSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+class MoviesViewSet(viewsets.ModelViewSet):
+    queryset = Movie.objects.all()
+    serializer_class = MovieSerializer
+    http_method_names = ['get', 'post', 'head']
 
 
-class BackdropImageViewSet(viewsets.ViewSet):
+class BackdropImageViewSet(viewsets.ModelViewSet):
     parser_classes = (MultiPartParser, FormParser)
-
-    def create(self, request):
-        serializer = BackdropImageSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-# class MoviesViewSet(viewsets.ModelViewSet):
-
-#     queryset = Movie.objects.all()
-#     serializer_class = MovieSerializer
+    queryset = BackdropImage.objects.all()
+    serializer_class = BackdropImageSerializer
+    http_method_names = ['post', 'head']
