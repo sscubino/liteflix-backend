@@ -15,6 +15,7 @@ class BackdropImage(models.Model):
 class Movie(models.Model):
     title = models.CharField(max_length=300)
     backdrop = models.ForeignKey(BackdropImage, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     @property
     def backdrop_path(self):
