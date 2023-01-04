@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env("DEBUG") == True
 
 ALLOWED_HOSTS = env("ALLOWED_HOSTS").split(',')
 
@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'storages',
     'movies'
 ]
 
@@ -85,7 +86,7 @@ WSGI_APPLICATION = 'liteflix.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / ('test-db.sqlite3' if DEBUG else 'db.sqlite3'),
     }
 }
 
@@ -124,11 +125,36 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
-STATIC_URL = '/static/'
+if DEBUG:
+    STATIC_ROOT = os.path.join(BASE_DIR, "static")
+    STATIC_URL = '/static/'
 
-MEDIA_ROOT =  os.path.join(os.path.dirname(BASE_DIR), 'media')
-MEDIA_URL = '/media/'
+    MEDIA_ROOT =  os.path.join(os.path.dirname(BASE_DIR), "media")
+    MEDIA_URL = '/media/'
+
+else:
+    # AWS STORAGE
+    AWS_LOCATION = 'static'
+    AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")
+    AWS_S3_CUSTOM_DOMAIN='%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+    AWS_S3_OBJECT_PARAMETERS = {    
+        'CacheControl': 'max-age=86400',
+    }
+    DEFAULT_FILE_STORAGE = 'liteflix.storage_backends.MediaStorage'
+    STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    STATICFILES_DIRS = [
+        os.path.join(os.path.dirname(BASE_DIR), 'static'),
+    ] 
+    STATIC_URL='https://%s/%s/' % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
+    ADMIN_MEDIA_PREFIX = STATIC_URL + 'admin/'
+    STATICFILES_FINDERS = (
+        'django.contrib.staticfiles.finders.FileSystemFinder',
+        'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    )
+    AWS_DEFAULT_ACL = None
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
